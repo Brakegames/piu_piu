@@ -34,6 +34,8 @@ class MainClass:
 
         self.result_file = None
 
+        self.fio = ""
+
         self.training_button = None
         self.series_1_button = None
         self.series_2_button = None
@@ -91,6 +93,7 @@ class MainClass:
             self.series_3_button.config(state="disabled")
             self.series_4_button.config(state="disabled")
         else:
+            self.fio = sv.get()
             self.training_button.config(state="normal")
             self.series_1_button.config(state="normal")
             self.series_2_button.config(state="normal")
@@ -119,7 +122,7 @@ class MainClass:
 
         self.init_task_window()
 
-        self.result_file = open("training.txt", "w+")
+        self.result_file = open("{}_training.txt".format(self.fio), "w+")
 
         self.current_series = self.start_training
         self.task_window.bind("<space>", self.start_training)
@@ -149,10 +152,11 @@ class MainClass:
 
             canvas.pack(fill=BOTH, expand=1)
 
-            self.repeat_counter = 5
+            self.repeat_counter = 40
             self.task_window.after(random.randint(1000, 2000), self.random_two_keys)
 
         elif self.current_task == 2:
+            self.result_file.write("--------------------------\r\n")
             instruction = Message(self.task_window, text=self.instruction_2)
             instruction.place(x=20, y=20, width=600, height=440)
             self.task_window.bind("<space>", self.start_training)
@@ -166,7 +170,7 @@ class MainClass:
 
             canvas.pack(fill=BOTH, expand=1)
 
-            self.repeat_counter = 5
+            self.repeat_counter = 40
             self.task_window.after(1000, self.fixed_two_keys)
         else:
             self.current_task = 0
@@ -177,7 +181,7 @@ class MainClass:
 
         self.init_task_window()
 
-        self.result_file = open("series_1.txt", "w+")
+        self.result_file = open("{}_series_1.txt".format(self.fio), "w+")
 
         self.current_series = self.start_series_1
         self.task_window.bind("<space>", self.start_series_1)
@@ -231,6 +235,20 @@ class MainClass:
         elif self.current_task == 5:
             self.is_fixed_time = True
             task = Message(self.task_window, text=self.task_3)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_window.after(1000, self.fixed_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 6:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 7:
+            self.is_fixed_time = True
+            task = Message(self.task_window, text=self.task_4)
             task.place(x=20, y=20, width=600, height=440)
 
             self.repeat_counter = -1
@@ -306,7 +324,7 @@ class MainClass:
                 self.result_file.write("false;{};\r\n".format(answer_time))
 
         if self.is_fixed_time:
-            self.task_window.after(1000, self.fixed_two_keys())
+            self.task_window.after(1000, self.fixed_two_keys)
 
     def on_left_button(self, event=None):
 
@@ -319,7 +337,7 @@ class MainClass:
                 self.result_file.write("false;{};\r\n".format(answer_time))
 
         if self.is_fixed_time:
-            self.task_window.after(1000, self.fixed_two_keys())
+            self.task_window.after(1000, self.fixed_two_keys)
 
     def on_enter_button(self, event=None):
         self.result_file.write("--------------------------\r\n")
