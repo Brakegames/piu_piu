@@ -1,6 +1,28 @@
 import random
 from tkinter import *
 import time
+import pygame
+from pygame.mixer import Sound, get_init, pre_init
+from array import array
+
+
+class Note(Sound):
+
+    def __init__(self, frequency, volume=.1):
+        self.frequency = frequency
+        Sound.__init__(self, self.build_samples())
+        self.set_volume(volume)
+
+    def build_samples(self):
+        period = int(round(get_init()[0] / self.frequency))
+        samples = array("h", [0] * period)
+        amplitude = 2 ** (abs(get_init()[1]) - 1) - 1
+        for time in range(period):
+            if time < period / 2:
+                samples[time] = amplitude
+            else:
+                samples[time] = -amplitude
+        return samples
 
 
 class MainClass:
@@ -29,6 +51,7 @@ class MainClass:
         self.start_time = None
         self.is_fixed_time = False
         self.is_task_end = False
+        self.task_start_time = None
 
         self.current_series = None
 
@@ -70,15 +93,15 @@ class MainClass:
         self.series_1_button.place(x=142, y=50, width=100)
         self.series_1_button.config(state="disabled")
 
-        self.series_2_button = Button(self.main_window, text="Серия 2", command=self.on_series_1_button)
+        self.series_2_button = Button(self.main_window, text="Серия 2", command=self.on_series_2_button)
         self.series_2_button.place(x=270, y=50, width=100)
         self.series_2_button.config(state="disabled")
 
-        self.series_3_button = Button(self.main_window, text="Серия 3", command=self.on_series_1_button)
+        self.series_3_button = Button(self.main_window, text="Серия 3", command=self.on_series_3_button)
         self.series_3_button.place(x=398, y=50, width=100)
         self.series_3_button.config(state="disabled")
 
-        self.series_4_button = Button(self.main_window, text="Серия 4", command=self.on_series_1_button)
+        self.series_4_button = Button(self.main_window, text="Серия 4", command=self.on_series_4_button)
         self.series_4_button.place(x=526, y=50, width=100)
         self.series_4_button.config(state="disabled")
 
@@ -210,6 +233,7 @@ class MainClass:
             task.place(x=20, y=20, width=600, height=440)
 
             self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
             self.task_window.after(random.randint(1000, 2000), self.random_two_keys)
 
             self.task_window.bind("<Return>", self.on_enter_button)
@@ -224,6 +248,7 @@ class MainClass:
             task.place(x=20, y=20, width=600, height=440)
 
             self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
             self.task_window.after(random.randint(1000, 2000), self.random_two_keys)
 
             self.task_window.bind("<Return>", self.on_enter_button)
@@ -238,6 +263,7 @@ class MainClass:
             task.place(x=20, y=20, width=600, height=440)
 
             self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
             self.task_window.after(1000, self.fixed_two_keys)
 
             self.task_window.bind("<Return>", self.on_enter_button)
@@ -252,7 +278,269 @@ class MainClass:
             task.place(x=20, y=20, width=600, height=440)
 
             self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
             self.task_window.after(1000, self.fixed_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        else:
+            self.current_task = 0
+            self.result_file.close()
+            self.task_window.destroy()
+
+    def on_series_2_button(self):
+
+        self.init_task_window()
+
+        self.result_file = open("{}_series_2.txt".format(self.fio), "w+")
+
+        self.current_series = self.start_series_1
+        self.task_window.bind("<space>", self.start_series_1)
+
+    def start_series_2(self, event=None):
+
+        _list = self.task_window.winfo_children()
+
+        for item in _list:
+            if item.winfo_children():
+                _list.extend(item.winfo_children())
+        for item in _list:
+            item.pack_forget()
+
+        self.task_window.unbind("<space>")
+        self.task_window.unbind("<Return>")
+
+        if self.current_task == 0:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 1:
+            self.is_fixed_time = True
+            task = Message(self.task_window, text=self.task_2)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(1000, self.fixed_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 2:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 3:
+            self.is_fixed_time = False
+            task = Message(self.task_window, text=self.task_3)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(random.randint(1000, 2000), self.random_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 4:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 5:
+            self.is_fixed_time = False
+            task = Message(self.task_window, text=self.task_4)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(random.randint(1000, 2000), self.random_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 6:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 7:
+            self.is_fixed_time = True
+            task = Message(self.task_window, text=self.task_1)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(1000, self.fixed_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        else:
+            self.current_task = 0
+            self.result_file.close()
+            self.task_window.destroy()
+
+    def on_series_3_button(self):
+
+        self.init_task_window()
+
+        self.result_file = open("{}_series_2.txt".format(self.fio), "w+")
+
+        self.current_series = self.start_series_1
+        self.task_window.bind("<space>", self.start_series_1)
+
+    def start_series_3(self, event=None):
+
+        _list = self.task_window.winfo_children()
+
+        for item in _list:
+            if item.winfo_children():
+                _list.extend(item.winfo_children())
+        for item in _list:
+            item.pack_forget()
+
+        self.task_window.unbind("<space>")
+        self.task_window.unbind("<Return>")
+
+        if self.current_task == 0:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 1:
+            self.is_fixed_time = True
+            task = Message(self.task_window, text=self.task_3)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(1000, self.fixed_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 2:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 3:
+            self.is_fixed_time = True
+            task = Message(self.task_window, text=self.task_4)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(1000, self.fixed_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 4:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 5:
+            self.is_fixed_time = False
+            task = Message(self.task_window, text=self.task_1)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(random.randint(1000, 2000), self.random_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 6:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 7:
+            self.is_fixed_time = False
+            task = Message(self.task_window, text=self.task_2)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(random.randint(1000, 2000), self.random_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        else:
+            self.current_task = 0
+            self.result_file.close()
+            self.task_window.destroy()
+
+    def on_series_4_button(self):
+
+        self.init_task_window()
+
+        self.result_file = open("{}_series_2.txt".format(self.fio), "w+")
+
+        self.current_series = self.start_series_1
+        self.task_window.bind("<space>", self.start_series_1)
+
+    def start_series_4(self, event=None):
+
+        _list = self.task_window.winfo_children()
+
+        for item in _list:
+            if item.winfo_children():
+                _list.extend(item.winfo_children())
+        for item in _list:
+            item.pack_forget()
+
+        self.task_window.unbind("<space>")
+        self.task_window.unbind("<Return>")
+
+        if self.current_task == 0:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 1:
+            self.is_fixed_time = False
+            task = Message(self.task_window, text=self.task_4)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(random.randint(1000, 2000), self.random_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 2:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 3:
+            self.is_fixed_time = True
+            task = Message(self.task_window, text=self.task_1)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(1000, self.fixed_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 4:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 5:
+            self.is_fixed_time = True
+            task = Message(self.task_window, text=self.task_2)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(1000, self.fixed_two_keys)
+
+            self.task_window.bind("<Return>", self.on_enter_button)
+        elif self.current_task == 6:
+            instruction = Message(self.task_window, text=self.instruction_3)
+            instruction.place(x=20, y=20, width=600, height=440)
+            self.task_window.bind("<space>", self.start_series_1)
+            self.current_task += 1
+        elif self.current_task == 7:
+            self.is_fixed_time = False
+            task = Message(self.task_window, text=self.task_3)
+            task.place(x=20, y=20, width=600, height=440)
+
+            self.repeat_counter = -1
+            self.task_start_time = int(round(time.time() * 1000))
+            self.task_window.after(random.randint(1000, 2000), self.random_two_keys)
 
             self.task_window.bind("<Return>", self.on_enter_button)
         else:
@@ -274,11 +562,19 @@ class MainClass:
             self.is_answered = False
             if bool(random.getrandbits(1)):
                 print("Hight beep")
+
+                pre_init(44100, -16, 1, 1024)
+                pygame.init()
+                Note(440).play(100)
                 self.start_time = int(round(time.time() * 1000))
                 self.is_right_answer = True
                 self.is_left_answer = False
             else:
                 print("Low beep")
+
+                pre_init(44100, -16, 1, 1024)
+                pygame.init()
+                Note(340).play(100)
                 self.start_time = int(round(time.time() * 1000))
                 self.is_right_answer = False
                 self.is_left_answer = True
@@ -300,11 +596,19 @@ class MainClass:
             self.is_answered = False
             if bool(random.getrandbits(1)):
                 print("Hight beep")
+
+                pre_init(44100, -16, 1, 1024)
+                pygame.init()
+                Note(440).play(100)
                 self.start_time = int(round(time.time() * 1000))
                 self.is_right_answer = True
                 self.is_left_answer = False
             else:
                 print("Low beep")
+
+                pre_init(44100, -16, 1, 1024)
+                pygame.init()
+                Note(340).play(100)
                 self.start_time = int(round(time.time() * 1000))
                 self.is_right_answer = False
                 self.is_left_answer = True
@@ -340,6 +644,7 @@ class MainClass:
             self.task_window.after(1000, self.fixed_two_keys)
 
     def on_enter_button(self, event=None):
+        self.result_file.write("Время выполнения: {}\r\n".format(int(round(time.time() * 1000)) - self.task_start_time))
         self.result_file.write("--------------------------\r\n")
         self.is_task_end = True
 
